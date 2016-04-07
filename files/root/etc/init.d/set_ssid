@@ -1,0 +1,24 @@
+#!/bin/sh /etc/rc.common
+START=99
+
+SET_SSID(){
+	macaddr="$(cat /sys/class/ieee80211/phy0/macaddress |sed 's/://g'|cut -c 7-12 | tr [a-z] [A-Z])"
+	local locssid
+	config_get locssid $1 ssid
+	if [ "$locssid" = "bellnet-default" ]; then
+		wifi down
+		locssid="bellnet${macaddr}"
+		uci set wireless.@wifi-iface[0].ssid=$locssid
+		uci commit
+		wifi up
+	fi
+}
+
+start(){
+	config_load wireless
+	config_foreach SET_SSID wifi-iface
+}
+stop(){
+	sleep 1
+}
+
